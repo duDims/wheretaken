@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bien joué, bienvenue à toi jeune aventureux</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #1E3A8A; color: white; }
+        #map { height: 400px; width: 80%; margin: auto; }
+        img { max-width: 100%; height: auto; margin-bottom: 10px; }
+        button { display: block; margin: 10px auto; padding: 10px 20px; font-size: 16px; background-color: white; color: #1E3A8A; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #ccc; }
+        #next-btn { margin-top: 20px; position: relative; bottom: 0; }
+        @media (max-width: 600px) { #map { height: 300px; width: 90%; } }
+    </style>
+</head>
+<body>
+    <div id="password-page">
+        <h1>Password</h1>
+        <input type="password" id="password" placeholder="Enter password">
+        <button onclick="checkPassword()">Submit</button>
+        <p id="password-message"></p>
+    </div>
+    <div id="game" style="display:none;">
+        <h1>Bien joué, bienvenue à toi jeune aventureux</h1>
+        <img id="photo" src="" alt="Location Photo">
+        <div id="map"></div>
+        <button id="submit-btn" onclick="submitGuess()">Guess</button>
+        <p id="current-score">Current Score: 0</p>
+        <p id="total-score">Total Score: 0</p>
+        <p id="distance-message"></p>
+        <p id="encouragement-message"></p>
+        <button id="next-btn" onclick="nextPhoto()" style="display:none;">Photo suivante</button>
+    </div>
+    <script>
+        function checkPassword() {
+            const enteredPassword = document.getElementById("password").value.toLowerCase().replace(/\s+/g, '');
+            const validPasswords = ["quiveutducake?", "quiveutducake", "qui veut du cake?", "qui veut du cake"];
+            if (validPasswords.includes(enteredPassword)) {
+                document.getElementById("password-page").style.display = "none";
+                document.getElementById("game").style.display = "block";
+                loadGame();
+            } else {
+                document.getElementById("password-message").textContent = "Miiiip, essaie encore";
+            }
+        }
+        const images = [
+            { src: "A.png", lat: 50.84097705357317, lon: 4.368088101569963 },
+            { src: "B.png", lat: 50.94368200910033, lon: 6.958593086242689 },
+            { src: "C.png", lat: 51.051540, lon: 3.678279 },
+            { src: "D.png", lat: 50.88552443379651, lon: 4.671308692061346 },
+            { src: "E.png", lat: 50.932361988000245, lon: 5.48798231326981 }
+        ];
+        let currentImageIndex = 0;
+        let totalScore = 0;
+        let map, marker, line;
+        function loadGame() {
+            document.getElementById("photo").src = images[currentImageIndex].src;
+            document.getElementById("next-btn").style.display = "none";
+            document.getElementById("submit-btn").style.display = "block";
+            document.getElementById("encouragement-message").textContent = "";
+            map = L.map('map').setView([50, 4], 6);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            map.on('click', function(e) {
+                if (marker) map.removeLayer(marker);
+                marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
+            });
+        }
+        function submitGuess() {
+            if (!marker) return alert("Click on the map to select a location");
+            const actual = images[currentImageIndex];
+            const distance = getDistance(marker.getLatLng().lat, marker.getLatLng().lng, actual.lat, actual.lon);
+            let score = distance > 10 ? 0 : 200;
+            totalScore += score;
+            document.getElementById("current-score").textContent = "Current Score: " + score;
+            document.getElementById("total-score").textContent = "Total Score: " + totalScore;
+            document.getElementById("distance-message").textContent = `Distance: ${distance.toFixed(2)} km`;
+            document.getElementById("encouragement-message").textContent = getEncouragementMessage(score);
+            if (line) map.removeLayer(line);
+            line = L.polyline([[marker.getLatLng().lat, marker.getLatLng().lng], [actual.lat, actual.lon]], {color: 'red', dashArray: '5, 10'}).addTo(map);
+            document.getElementById("submit-btn").style.display = "none";
+            document.getElementById("next-btn").style.display = "block";
+        }
+        function getEncouragementMessage(score) {
+            if (score === 200) return "OMG BRAVO T'ES UN KING";
+            if (score >= 180) return "Impressionnant, t'es pas loin de la perfection !";
+            if (score >= 160) return "Bien joué, c'était presque ça !";
+            if (score >= 140) return "Pas mal du tout, t'as un bon oeil !";
+            if (score >= 120) return "T'es sur la bonne voie, continue !";
+            if (score >= 100) return "Bon score, mais y’a encore une marge !";
+            if (score >= 80) return "Ouloulou c’est pas fameux, mais on y croit !";
+            if (score >= 60) return "T’as visé la bonne planète, c’est déjà ça !";
+            if (score >= 40) return "Mdr, t’es sûr que t’as regardé la photo ?";
+            if (score >= 20) return "On va dire que t’as cliqué au hasard, hein ?";
+            return "0 points ?! Franchement, même Google Maps fait mieux...";
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
