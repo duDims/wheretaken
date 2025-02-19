@@ -46,6 +46,7 @@
                 document.getElementById("password-message").textContent = "Miiiip, essaie encore";
             }
         }
+
         const images = [
             { src: "A.png", lat: 50.84097705357317, lon: 4.368088101569963 },
             { src: "B.png", lat: 50.94368200910033, lon: 6.958593086242689 },
@@ -53,36 +54,49 @@
             { src: "D.png", lat: 50.88552443379651, lon: 4.671308692061346 },
             { src: "E.png", lat: 50.932361988000245, lon: 5.48798231326981 }
         ];
+
         let currentImageIndex = 0;
         let totalScore = 0;
         let map, marker, line;
+
         function loadGame() {
             document.getElementById("photo").src = images[currentImageIndex].src;
             document.getElementById("next-btn").style.display = "none";
             document.getElementById("submit-btn").style.display = "block";
             document.getElementById("encouragement-message").textContent = "";
+
             map = L.map('map').setView([50, 4], 6);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
             map.on('click', function(e) {
                 if (marker) map.removeLayer(marker);
                 marker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(map);
             });
         }
+
         function submitGuess() {
-            if (!marker) return alert("Click on the map to select a location");
+            if (!marker) {
+                alert("Please click on the map to select a location.");
+                return;
+            }
+
             const actual = images[currentImageIndex];
             const distance = getDistance(marker.getLatLng().lat, marker.getLatLng().lng, actual.lat, actual.lon);
             let score = distance > 10 ? 0 : 200;
+
             totalScore += score;
             document.getElementById("current-score").textContent = "Current Score: " + score;
             document.getElementById("total-score").textContent = "Total Score: " + totalScore;
             document.getElementById("distance-message").textContent = `Distance: ${distance.toFixed(2)} km`;
             document.getElementById("encouragement-message").textContent = getEncouragementMessage(score);
+
             if (line) map.removeLayer(line);
             line = L.polyline([[marker.getLatLng().lat, marker.getLatLng().lng], [actual.lat, actual.lon]], {color: 'red', dashArray: '5, 10'}).addTo(map);
+
             document.getElementById("submit-btn").style.display = "none";
             document.getElementById("next-btn").style.display = "block";
         }
+
         function getEncouragementMessage(score) {
             if (score === 200) return "OMG BRAVO T'ES UN KING";
             if (score >= 180) return "Impressionnant, t'es pas loin de la perfection !";
@@ -95,6 +109,15 @@
             if (score >= 40) return "Mdr, t’es sûr que t’as regardé la photo ?";
             if (score >= 20) return "On va dire que t’as cliqué au hasard, hein ?";
             return "0 points ?! Franchement, même Google Maps fait mieux...";
+        }
+
+        function nextPhoto() {
+            currentImageIndex++;
+            if (currentImageIndex < images.length) {
+                loadGame();
+            } else {
+                alert("You've completed the game!");
+            }
         }
     </script>
 </body>
